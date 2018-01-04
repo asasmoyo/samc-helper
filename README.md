@@ -1,2 +1,2 @@
-# ipc
-Simple IPC library for Golang
+# samc helper
+Helper library for SAMC integration.
