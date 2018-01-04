@@ -76,8 +76,8 @@ func NewIPC(data map[string]int, toID string) (string, error) {
 	data["event_id"] = hashID
 	buf.WriteString(fmt.Sprintf("event_id=%d\n", hashID))
 
-	fileName := fmt.Sprintf("%s%d", ipcPrefix, time.Now().UnixNano())
-	path := computePath(filepath.Join("new", fileName))
+	fileName := fmt.Sprintf("%d", time.Now().UnixNano())
+	path := computePath(filepath.Join("new", ipcPrefix+fileName))
 	log.Println("[SAMC-HELPER] writing new ipc at", path)
 	err := ioutil.WriteFile(path, buf.Bytes(), os.ModePerm)
 	if err != nil {
