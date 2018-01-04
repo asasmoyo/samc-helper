@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -58,19 +57,7 @@ func ReadIPC(subPath string) (map[string]string, error) {
 // The data will be written into ipcDir/subPath/md5(data)
 // It uses NODES environment variable to determine node number from toID
 func NewIPC(data map[string]int, toID string) (string, error) {
-	nodesContent, err := ioutil.ReadFile(nodesFile)
-	if err != nil {
-		return "", err
-	}
-	var nodes map[string]int
-	err = json.Unmarshal(nodesContent, &nodes)
-	if err != nil {
-		return "", err
-	}
-	if _, ok := nodes[toID]; !ok {
-		return "", errors.New("cannot find node number of receiving node")
-	}
-	data["receiving_node"] = nodes[toID]
+	data["receiving_node"] = ResolveNodeID(toID)
 
 	keys := []string{}
 	for k := range data {
@@ -97,7 +84,7 @@ func NewIPC(data map[string]int, toID string) (string, error) {
 
 	path := computePath(filepath.Join("new", ipcPrefix+fHash))
 	log.Println("[SAMC-HELPER] writing new ipc", ipcPrefix+fHash, data, "at", path)
-	err = ioutil.WriteFile(path, buf.Bytes(), os.ModePerm)
+	err := ioutil.WriteFile(path, buf.Bytes(), os.ModePerm)
 	if err != nil {
 		return "", err
 	}
