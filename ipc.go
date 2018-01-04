@@ -3,8 +3,6 @@ package samchelper
 import (
 	"bufio"
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -71,10 +69,6 @@ func NewIPC(data map[string]int, toID string) (string, error) {
 		buf.WriteString(fmt.Sprintf("%s=%d\n", key, val))
 	}
 
-	hasher := md5.New()
-	hasher.Write(buf.Bytes())
-	fHash := hex.EncodeToString(hasher.Sum(nil))
-
 	// compute hash id
 	iHasher := fnv.New32()
 	iHasher.Write(buf.Bytes())
@@ -82,14 +76,15 @@ func NewIPC(data map[string]int, toID string) (string, error) {
 	data["event_id"] = hashID
 	buf.WriteString(fmt.Sprintf("event_id=%d\n", hashID))
 
-	path := computePath(filepath.Join("new", ipcPrefix+fHash))
-	log.Println("[SAMC-HELPER] writing new ipc", ipcPrefix+fHash, data, "at", path)
+	fileName := fmt.Sprintf("%s%d", ipcPrefix, time.Now().UnixNano())
+	path := computePath(filepath.Join("new", fileName))
+	log.Println("[SAMC-HELPER] writing new ipc at", path)
 	err := ioutil.WriteFile(path, buf.Bytes(), os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 
-	return fHash, err
+	return fileName, err
 }
 
 // SendIPC moves new ipc file located at subPath into send folder
@@ -110,12 +105,11 @@ func SendIPC(fileName string) error {
 }
 
 // WaitForAckIPC waits until given fileName exists inside ack folder
-func WaitForAckIPC(fileName string) error {
+func WaitForAckIPC(fileName string) {
 	path := computePath(filepath.Join("ack", ipcPrefix+fileName))
 	log.Println("[SAMC-HELPER] waiting ack for " + ipcPrefix + fileName + " at " + path)
 	for _, err := os.Stat(path); os.IsNotExist(err); _, err = os.Stat(path) {
 		time.Sleep(1 * time.Second)
 	}
 	log.Println("[SAMC-HELPER] got ack for " + ipcPrefix + fileName + " at " + path)
-	return nil
 }
