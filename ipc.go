@@ -78,7 +78,7 @@ func NewIPC(data map[string]int, toID string) (string, error) {
 
 	fileName := fmt.Sprintf("%d", time.Now().UnixNano())
 	path := computePath(filepath.Join("new", ipcPrefix+fileName))
-	log.Println("[SAMC-HELPER] writing new ipc at", path)
+	log.Println("[SAMC-HELPER] writing new ipc at", path, "data", data)
 	err := ioutil.WriteFile(path, buf.Bytes(), os.ModePerm)
 	if err != nil {
 		return "", err
