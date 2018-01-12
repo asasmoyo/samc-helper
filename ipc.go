@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -55,7 +56,13 @@ func ReadIPC(subPath string) (map[string]string, error) {
 // The data will be written into ipcDir/subPath/md5(data)
 // It uses NODES environment variable to determine node number from toID
 func NewIPC(data map[string]int, toID string) (string, error) {
-	data["receiving_node"] = ResolveNodeID(toID)
+	nodeID, _ := strconv.ParseInt(os.Getenv("NODE_ID"), 10, 64)
+	data["sender_node"] = int(nodeID)
+	if toID == "" {
+		data["receiving_node"] = int(nodeID)
+	} else {
+		data["receiving_node"] = ResolveNodeID(toID)
+	}
 
 	keys := []string{}
 	for k := range data {
