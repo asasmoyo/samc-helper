@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -83,7 +84,7 @@ func NewIPC(data map[string]int, toID string) (string, error) {
 	data["event_id"] = hashID
 	buf.WriteString(fmt.Sprintf("event_id=%d\n", hashID))
 
-	fileName := fmt.Sprintf("%d", time.Now().UnixNano())
+	fileName := fmt.Sprintf("%d-%d", hashID, time.Now().UnixNano())
 	path := computePath(filepath.Join("new", ipcPrefix+fileName))
 	log.Println("[SAMC-HELPER] writing new ipc from", nodeID, "at", path, "data", data)
 	err := ioutil.WriteFile(path, buf.Bytes(), os.ModePerm)
@@ -98,17 +99,8 @@ func NewIPC(data map[string]int, toID string) (string, error) {
 func SendIPC(fileName string) error {
 	oldPath := computePath(filepath.Join("new", ipcPrefix+fileName))
 	newPath := computePath(filepath.Join("send", ipcPrefix+fileName))
-
-	content, err := ioutil.ReadFile(oldPath)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(newPath, content, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return os.RemoveAll(oldPath)
+	cmd := exec.Command("mv", oldPath, newPath)
+	return cmd.Run()
 }
 
 // WaitForAckIPC waits until given fileName exists inside ack folder
